@@ -67,7 +67,7 @@
         var mapContainer = document.getElementById('map'), 
             mapOption = { 
                 center: new kakao.maps.LatLng(37.5172, 126.8920), 
-                level: 3 // 📌 [수정] 기본 6에서 3으로 변경하여 250m 반경 시야로 대폭 확대했습니다!
+                level: 4 // 📌 [수정] 3(너무 가까움)과 6(너무 먼)의 딱 중간인 '4'로 황금 비율 세팅!
             }; 
 
         var map = new kakao.maps.Map(mapContainer, mapOption); 
@@ -96,7 +96,7 @@
             });
         });
 
-        // 실시간 운동원 GPS 위치 추적 (지도가 확대된 상태에서 내 위치 중심으로 따라갑니다)
+        // 실시간 운동원 GPS 위치 추적
         if (navigator.geolocation) {
             navigator.geolocation.watchPosition(function(position) {
                 var lat = position.coords.latitude;
