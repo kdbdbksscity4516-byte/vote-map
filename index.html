@@ -20,7 +20,7 @@
         /* 투표소 이름 표시용 깔끔한 흰색 상자 */
         .station-label {
             background: white;
-            border: 1px solid #ff4d4d; /* 원 색상과 맞춘 연한 빨강 테두리 */
+            border: 1px solid #ff4d4d; 
             border-radius: 4px;
             padding: 4px 8px;
             font-size: 11px;
@@ -67,28 +67,26 @@
         var mapContainer = document.getElementById('map'), 
             mapOption = { 
                 center: new kakao.maps.LatLng(37.5172, 126.8920), 
-                level: 6 
+                level: 3 // 📌 [수정] 기본 6에서 3으로 변경하여 250m 반경 시야로 대폭 확대했습니다!
             }; 
 
         var map = new kakao.maps.Map(mapContainer, mapOption); 
         var geocoder = new kakao.maps.services.Geocoder();
         var userMarker = null; 
 
-        // 18개 사전투표소 영역 표시 (마커 없이 글자 박스와 원만 생성)
+        // 18개 사전투표소 영역 표시
         votingStations.forEach(function(station) {
             geocoder.addressSearch(station.address, function(result, status) {
                 if (status === kakao.maps.services.Status.OK) {
                     var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
                     
-                    // 📌 핀 마커를 완전히 제외하고, 중심점에 딱 맞게 이름 박스만 노출
                     var customOverlay = new kakao.maps.CustomOverlay({
                         position: coords,
                         content: '<div class="station-label">' + station.name + '</div>',
-                        yAnchor: 0.5 // 정확히 원의 중심점에 글자가 오도록 조정
+                        yAnchor: 0.5 
                     });
                     customOverlay.setMap(map);
                     
-                    // 반경 100m 금지구역 원 생성
                     var circle = new kakao.maps.Circle({
                         center: coords, radius: 100, strokeWeight: 2, strokeColor: '#ff4d4d',
                         strokeOpacity: 0.8, strokeStyle: 'solid', fillColor: '#ff4d4d', fillOpacity: 0.15
@@ -98,7 +96,7 @@
             });
         });
 
-        // 실시간 운동원 GPS 위치 추적 (기본 파란색 마커 사용으로 오류 차단)
+        // 실시간 운동원 GPS 위치 추적 (지도가 확대된 상태에서 내 위치 중심으로 따라갑니다)
         if (navigator.geolocation) {
             navigator.geolocation.watchPosition(function(position) {
                 var lat = position.coords.latitude;
@@ -108,7 +106,6 @@
                 if (userMarker) {
                     userMarker.setPosition(locPosition);
                 } else {
-                    // 📌 아무 이미지 옵션도 주지 않아 카카오 기본 파란색 핀 마커가 내 위치로 작동함
                     userMarker = new kakao.maps.Marker({ 
                         map: map, 
                         position: locPosition
