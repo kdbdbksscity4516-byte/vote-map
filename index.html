@@ -17,7 +17,7 @@
         .danger-zone { color: #ff4d4d; font-weight: bold; }
         .my-loc-text { color: #df2212; font-weight: bold; }
         
-        /* 📌 말풍선 흰색 박스 크기를 글자 길이에 딱 맞추는 스타일 기법 */
+        /* 말풍선 박스 스타일 기법 */
         .custom-infowindow {
             background: white;
             border: 1px solid #ccc;
@@ -27,7 +27,7 @@
             font-weight: bold;
             color: #333;
             text-align: center;
-            white-space: nowrap; /* 글자가 밑으로 꺾이지 않고 한 줄로 딱 맞게 */
+            white-space: nowrap; 
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
     </style>
@@ -74,10 +74,10 @@
         var geocoder = new kakao.maps.services.Geocoder();
         var userMarker = null; 
 
-        // 📌 [수정] 내 위치용 빨간색 핀 마커 이미지 (투표소 핀과 똑같은 모양, 색상만 빨강)
-        var imageSrc = 'https://localimg.daumcdn.net/localimg/localimages/07/2012/img/marker_p.png', 
-            imageSize = new kakao.maps.Size(29, 42), 
-            imageOption = {offset: new kakao.maps.Point(14, 42)}; 
+        // 📌 [안전한 주소로 변경] 절대 깨지지 않는 구글 공식 호스팅 마커 핀 이미지 주소 사용
+        var imageSrc = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png', 
+            imageSize = new kakao.maps.Size(32, 32), 
+            imageOption = {offset: new kakao.maps.Point(16, 32)}; 
 
         var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
 
@@ -88,11 +88,10 @@
                     
                     var marker = new kakao.maps.Marker({ map: map, position: coords }); 
                     
-                    // 📌 [수정] 흰색 큰 커스텀 창 대신 글자 길이에 딱 맞는 초슬림 말풍선 적용
                     var customOverlay = new kakao.maps.CustomOverlay({
                         position: coords,
                         content: '<div class="custom-infowindow">' + station.name + '</div>',
-                        yAnchor: 2.3 // 핀 마커 바로 위에 딱 붙어 뜨도록 높이 조절
+                        yAnchor: 2.3 
                     });
                     customOverlay.setMap(map);
                     
