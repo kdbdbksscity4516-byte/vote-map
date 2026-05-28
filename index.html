@@ -15,7 +15,21 @@
             border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); font-size: 13px; line-height: 1.5;
         }
         .danger-zone { color: #ff4d4d; font-weight: bold; }
-        .my-loc-text { color: #e60000; font-weight: bold; }
+        .my-loc-text { color: #df2212; font-weight: bold; }
+        
+        /* 📌 말풍선 흰색 박스 크기를 글자 길이에 딱 맞추는 스타일 기법 */
+        .custom-infowindow {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            white-space: nowrap; /* 글자가 밑으로 꺾이지 않고 한 줄로 딱 맞게 */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
@@ -23,13 +37,12 @@
     <div id="info-box">
         🚨 <b>선거운동 금지구역 확인 (영등포구 전체)</b><br>
         • 지도 상의 <span class="danger-zone">빨간색 원(반경 100m)</span> 내부 : <b>선거운동 절대 금지</b><br>
-        • <span class="my-loc-text">빨간색 마커</span>가 내 실시간 위치입니다. (이동 시 자동 갱신)
+        • <span class="my-loc-text">빨간색 핀 마커</span>가 내 실시간 위치입니다. (이동 시 자동 갱신)
     </div>
 
     <div id="map"></div>
 
     <script>
-        // 영등포구 18개 사전투표소 최종 주소 목록 (괄호 안 상세 행정구역 보정 완료)
         var votingStations = [
             { name: "영등포본동 사전투표소", address: "서울시 영등포구 신길로61길 17" },
             { name: "영등포동 사전투표소", address: "서울시 영등포구 양산로 232" },
@@ -51,40 +64,38 @@
             { name: "대림제3동 사전투표소", address: "서울시 영등포구 도신로4길 20" }
         ];
 
-        // 영등포구 중심부로 초기 화면 설정
         var mapContainer = document.getElementById('map'), 
             mapOption = { 
                 center: new kakao.maps.LatLng(37.5172, 126.8920), 
-                level: 6 // 18개 투표소가 어느 정도 시야에 들어오도록 확대 레벨 조정
+                level: 6 
             }; 
 
         var map = new kakao.maps.Map(mapContainer, mapOption); 
         var geocoder = new kakao.maps.services.Geocoder();
         var userMarker = null; 
 
-        // 내 위치용 빨간색 마커 이미지 설정 (카카오 기본 빨간색 하트 마커)
-        var imageSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png', 
-            imageSize = new kakao.maps.Size(64, 69), 
-            imageOption = {offset: new kakao.maps.Point(27, 69)}; 
+        // 📌 [수정] 내 위치용 빨간색 핀 마커 이미지 (투표소 핀과 똑같은 모양, 색상만 빨강)
+        var imageSrc = 'https://localimg.daumcdn.net/localimg/localimages/07/2012/img/marker_p.png', 
+            imageSize = new kakao.maps.Size(29, 42), 
+            imageOption = {offset: new kakao.maps.Point(14, 42)}; 
 
         var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
 
-        // 18개 사전투표소 순회하며 지도에 표시 및 반경 100m 빨간 원 그리기
         votingStations.forEach(function(station) {
             geocoder.addressSearch(station.address, function(result, status) {
                 if (status === kakao.maps.services.Status.OK) {
                     var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
                     
-                    // 투표소 고정 마커 (기본 파란 핀)
                     var marker = new kakao.maps.Marker({ map: map, position: coords }); 
                     
-                    // 투표소 이름 말풍선
-                    var infowindow = new kakao.maps.InfoWindow({
-                        content: '<div style="padding:5px;font-size:11px;text-align:center;font-weight:bold;color:#333;width:130px;">' + station.name + '</div>'
+                    // 📌 [수정] 흰색 큰 커스텀 창 대신 글자 길이에 딱 맞는 초슬림 말풍선 적용
+                    var customOverlay = new kakao.maps.CustomOverlay({
+                        position: coords,
+                        content: '<div class="custom-infowindow">' + station.name + '</div>',
+                        yAnchor: 2.3 // 핀 마커 바로 위에 딱 붙어 뜨도록 높이 조절
                     });
-                    infowindow.open(map, marker);
+                    customOverlay.setMap(map);
                     
-                    // 투표소 기준 반경 100m 금지구역 원 생성
                     var circle = new kakao.maps.Circle({
                         center: coords, radius: 100, strokeWeight: 2, strokeColor: '#ff4d4d',
                         strokeOpacity: 0.8, strokeStyle: 'solid', fillColor: '#ff4d4d', fillOpacity: 0.15
@@ -94,7 +105,6 @@
             });
         });
 
-        // 실시간 운동원 GPS 위치 추적 및 빨간색 마커 매핑
         if (navigator.geolocation) {
             navigator.geolocation.watchPosition(function(position) {
                 var lat = position.coords.latitude;
@@ -107,9 +117,9 @@
                     userMarker = new kakao.maps.Marker({ 
                         map: map, 
                         position: locPosition,
-                        image: markerImage // 내 위치만 빨간색 마커 적용
+                        image: markerImage 
                     });
-                    map.setCenter(locPosition); // 앱 처음 켤 때 내 위치 중심 고정
+                    map.setCenter(locPosition); 
                 }
             }, function(error) {
                 console.error("위치 추적 실패:", error);
