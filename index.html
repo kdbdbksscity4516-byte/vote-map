@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>영등포구 사전투표소 반경 100m 체크</title>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=59607bc7645797fb02b59a58259a2af7&libraries=services"></script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif; }
+        #map { width: 100%; height: 100%; }
+        #info-box {
+            position: absolute; top: 10px; left: 10px; right: 10px; z-index: 10;
+            background: rgba(255, 255, 255, 0.95); padding: 12px;
+            border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); font-size: 13px; line-height: 1.5;
+        }
+        .danger-zone { color: #ff4d4d; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="info-box">
+        🚨 <b>선거운동 금지구역 확인 (영등포구)</b><br>
+        • 지도 상의 <span class="danger-zone">빨간색 원(반경 100m)</span> 내부 : <b>선거운동 절대 금지</b><br>
+        • 파란색 마커가 내 실시간 위치입니다. (이동 시 자동 갱신)
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+        // 문래, 도림 사전투표소 위치 등록 완료 (상세 층수는 보정 주소 처리)
+        var votingStations = [
+            { name: "문래동 사전투표소", address: "서울 영등포구 문래로28길 15" },
+            { name: "도림동 사전투표소", address: "서울 영등포구 도영로7길 10" }
+        ];
+
+        // 영등포구 중심 부근으로 초기 화면 설정
+        var mapContainer = document.getElementById('map'), 
+            mapOption = { 
+                center: new kakao.maps.LatLng(37.5172, 126.8920), 
+                level: 5 
+            }; 
+
+        var map = new kakao.maps.Map(mapContainer, mapOption); 
+        var geocoder = new kakao.maps.services.Geocoder();
+        var userMarker = null; 
+
+        // 등록된 투표소 주소 변환 및 반경 100m 빨간 원 그리기
+        votingStations.forEach(function(station) {
+            geocoder.addressSearch(station.address, function(result, status) {
+                if (status === kakao.maps.services.Status.OK) {
+                    var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+                    
+                    var marker = new kakao.maps.Marker({ map: map, position: coords });
+                    
+                    var infowindow = new kakao.maps.InfoWindow({
+                        content: '<div style="padding:5px;font-size:12px;text-align:center;font-weight:bold;color:#333;">' + station.name + '</div>'
+                    });
+                    infowindow.open(map, marker);
+                    
+                    var circle = new kakao.maps.Circle({
+                        center: coords, radius: 100, strokeWeight: 2, strokeColor: '#ff4d4d',
+                        strokeOpacity: 0.8, strokeStyle: 'solid', fillColor: '#ff4d4d', fillOpacity: 0.2
+                    });
+                    circle.setMap(map);
+                }
+            });
+        });
+
+        // 운동원 실시간 위치 추적 (GPS)
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(function(position) {
+                var lat = position.coords.latitude;
+                var lon = position.coords.longitude;
+                var locPosition = new kakao.maps.LatLng(lat, lon);
+
+                if (userMarker) {
+                    userMarker.setPosition(locPosition);
+                } else {
+                    userMarker = new kakao.maps.Marker({ map: map, position: locPosition });
+                    map.setCenter(locPosition); // 처음 켤 때만 운동원 위치로 지도 이동
+                }
+            }, function(error) {
+                console.error("위치 추적 실패:", error);
+            }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
+        } else {
+            alert("이 브라우저에서는 GPS 위치 서비스를 지원하지 않습니다.");
+        }
+    </script>
+</body>
+</html>
